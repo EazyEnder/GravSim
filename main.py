@@ -62,10 +62,10 @@ while(t < T_MAX):
 import matplotlib.pyplot as plt
 plt.figure(figsize=(10,10)) 
 
-for i in range(len(particles)):
-   plt.scatter([s[0].x for s in particles[i].states],[s[0].y for s in particles[i].states],s=0.3)
+#for i in range(len(particles)):
+#   plt.scatter([s[0].x for s in particles[i].states],[s[0].y for s in particles[i].states],s=0.3)
 
-#from computeEnergy import plotEnergy
-#plotEnergy(particles, dt)
+from computeEnergy import plotEnergy
+plotEnergy(particles, dt)
 
 plt.show()
