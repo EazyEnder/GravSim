@@ -2,6 +2,8 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as linalg
 import numpy as np
 
+#Executable script
+
 G_CST = 0.001
 
 def buildLaplacianMatrix1D(N=10,dx=1):
@@ -29,7 +31,7 @@ def buildGradientMatrix1D(N=10,dx=1):
     return M
 
 
-def leapfrog(particles_pos, Nx, size, rho0):
+def leapfrog(particles_pos, Nx, size, rho0, cst_G=G_CST):
 	N = particles_pos.shape[0]
 	dx = size / Nx
 	j = np.floor(particles_pos/dx).astype(int)
@@ -40,7 +42,7 @@ def leapfrog(particles_pos, Nx, size, rho0):
 	rho += np.bincount(j1[:,0], weights=w_j1[:,0], minlength=Nx);
 	rho *= rho0*size / N / dx 
 	
-	phi_grid = linalg.spsolve(buildLaplacianMatrix1D(Nx,dx), 4*np.pi*(rho)*G_CST)
+	phi_grid = linalg.spsolve(buildLaplacianMatrix1D(Nx,dx), 4*np.pi*(rho)*cst_G)
 	
 	G_grid = - buildGradientMatrix1D(Nx,dx) @ phi_grid
 	
@@ -52,21 +54,20 @@ def leapfrog(particles_pos, Nx, size, rho0):
 
 from math import floor
 
-def plotGraph(p_pos,p_vel,Nx=1000):
-    plt.clf()
-    plt.subplot(2,1,1)
-    plt.scatter(p_pos, p_vel, s=.25,color='black')
-    plt.axis([0,size,-6,6])
-    plt.title("Portrait de phase")
-    plt.xlabel("Position")
-    plt.ylabel("Vitesse")
+def plotGraph(p_pos,p_vel,ax1,ax2,Nx=1000):
+    ax1.cla()
+    ax1.scatter(p_pos, p_vel, s=.25,color='black')
+    ax1.set_xlim([0,size])
+    ax1.set_ylim([-6,6])
+    ax1.set_title("Portrait de phase")
+    ax1.set_xlabel("Position")
+    ax1.set_ylabel("Vitesse")
 
-    plt.subplot(2,1,2)
+    ax2.cla()
     rho  = np.bincount(np.floor(p_pos*Nx/size).astype(int)[:,0],   minlength=Nx);
-    plt.imshow([rho for i in range(100)])
-    plt.title("Densité")
-    plt.xlabel("Position")
-    plt.colorbar()
+    ax2.imshow([rho for i in range(100)])
+    ax2.set_title("Densité")
+    ax2.set_xlabel("Position")
 
      
 
@@ -81,20 +82,37 @@ particles_vel[floor(N/2):] *= -1
 dt = 1
 
 import matplotlib.pyplot as plt
+from matplotlib.widgets import  Slider
 
-fig = plt.figure(figsize=(5,5), dpi=100)
+fig, (ax1, ax2) = plt.subplots(2,1)
+
+fig.subplots_adjust(bottom=0.25)
+
+axG = fig.add_axes([0.25, 0.1, 0.65, 0.03])
+G_slider = Slider(
+    ax=axG,
+    label='G Constant',
+    valmin=0.0005,
+    valmax=0.002,
+    valinit=G_CST,
+)
+def slider_update(val):
+     global G_CST
+     G_CST = val
+G_slider.on_changed(slider_update)
+
 
 def launchSim(dt,Nt,Nx,size,p_pos,p_vel):
     p_ac = leapfrog( p_pos, Nx, size, 1.)
     t = 0
     for i in range(Nt):
          p_vel += p_ac * dt/2.0
-         p_pos += particles_vel * dt
+         p_pos += p_vel * dt
          p_pos = np.mod(p_pos, size)
-         p_ac = leapfrog( p_pos, Nx, size, 1)
+         p_ac = leapfrog( p_pos, Nx, size, 1, G_CST)
          p_vel += p_ac * dt/2.0
-         plt.cla()
-         plotGraph(p_pos,p_vel)
+         plotGraph(p_pos,p_vel,ax1,ax2)
+         #plt.savefig(fname="export/fig"+str(i)+"")
          plt.pause(0.01)
          t += dt
 
