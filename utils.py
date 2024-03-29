@@ -27,6 +27,65 @@ def countParticles(p_pos,total_size=15,frame_size=480):
         rho[i0,i1] += 1
     return rho
 
+def countParticlesUsingBilinearInterp(p_pos,total_size=15,frame_size=480):
+    weights = []
+    for pos in p_pos:
+        p0 = frame_size*pos[0]/total_size
+        p1 = frame_size*pos[1]/total_size
+
+        i0 = floor(p0)
+        i1 = floor(p1)
+        
+        center = np.array([i0+.5,i1+.5])
+        dist_to_center = pos-center
+        points = []
+        morph = np.zeros((2,2))
+        if(dist_to_center[0] > 0 and dist_to_center[1] > 0):
+            points = [
+                center,
+                [center[0],center[1]+1],
+                [center[0]+1,center[1]],
+                [center[0]+1,center[1]+1]
+            ]
+            morph[1][1] = 1
+            #"bas droit"
+        elif(dist_to_center[0] > 0 and dist_to_center[1] < 0):
+            points = [
+                [center[0]-1,center[1]],
+                [center[0]-1,center[1]+1],
+                center,
+                [center[0],center[1]+1]
+            ]
+            morph[0][1] = 1
+            #"haut droit"
+        elif(dist_to_center[0] < 0 and dist_to_center[1] > 0):
+            points = [
+                [center[0],center[1]-1],
+                center,
+                [center[0]+1,center[1]-1],
+                [center[0]+1,center[1]]
+            ]
+            #"bas gauche"
+            morph[1][0] = 1
+        elif(dist_to_center[0] < 0 and dist_to_center[1] < 0):
+            points = [
+                [center[0]-1,center[1]-1],
+                [center[0]-1,center[1]],
+                [center[0],center[1]-1],
+                center
+            ]
+            #"haut gauche"
+            morph[0][0] = 1
+        x = p0 - points[0][0]
+        y = p1 - points[0][1]
+        w0 = np.array([
+            [(1-x)*(1-y),((1-x)*y)],
+            [((1-y)*x),x*y]
+        ])
+        w = np.kron(morph,w0)
+
+
+
 def findMassCenter(rho,center=(0.,0.),distance=10.):
     """Find the inertia center of a circle localized area
         >Args: -rho: 2D tensor of density
