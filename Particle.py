@@ -14,6 +14,7 @@ class Particle():
         self.old_r = Vector2(x-vx*dt,y-vy*dt)
         self.states = []
         self.potential_energy = 0
+        self.host = None
     def distTo(self,p2):
         """Calculate the distance between this particle and another named p2"""
         diff = self.r.sub(p2.r)

@@ -2,10 +2,13 @@ import numpy as np
 from Particle import Particle
 from Vector2 import Vector2
 from math import *
+from utils import printProgressBar
+from QuadTree.QuadTree import QuadTree
+from QuadTree.QRegion import QRegion
 
 SIZE = 100
 
-P_NUMBER = 50
+P_NUMBER = 1000
 P_MASS = 1
 
 G = 0.25
@@ -15,9 +18,10 @@ from random import random
 
 dt = 0.5
 
-particles = []
+qt = QuadTree(QRegion(Vector2(0,0),SIZE*5))
 for i in range(P_NUMBER):
-    particles.append(Particle(P_MASS,SIZE*random(),SIZE*random(),0,0,dt=dt))
+    qt.insert(Particle(P_MASS,SIZE*random(),SIZE*random(),0,0,dt=dt))
+
 
 #Integration de Verlet
 a=0.3 #"amortissement"
@@ -43,14 +47,6 @@ def compute(particles):
         updated_particles.append(p)
     return updated_particles
 
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
-    if iteration == total: 
-        print()
-
 T_MAX = 100
 t = 0
 import copy
@@ -62,10 +58,7 @@ while(t < T_MAX):
 import matplotlib.pyplot as plt
 plt.figure(figsize=(10,10)) 
 
-#for i in range(len(particles)):
-#   plt.scatter([s[0].x for s in particles[i].states],[s[0].y for s in particles[i].states],s=0.3)
-
-from computeEnergy import plotEnergy
-plotEnergy(particles, dt)
+for i in range(len(particles)):
+   plt.scatter([s[0].x for s in particles[i].states],[s[0].y for s in particles[i].states],s=0.3)
 
 plt.show()

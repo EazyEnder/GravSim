@@ -23,7 +23,10 @@ class Vector2():
         return sqrt(self.dot(self))
     def normalize(self):
         """Normalize this vector"""
-        return self.multiplyScalar(1/self.length())
+        if(self.length() != 0.):
+            return self.multiplyScalar(1/self.length())
+        else:
+            return Vector2(0.,0.)
     def equals(self,v2):
         """Check if this vector is equal to another"""
         return self.x == v2.x and self.y == v2.y

@@ -10,6 +10,12 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     if iteration == total: 
         print()
 
+def isInBox(pos,center,h_length):
+    return (pos.x <= center.x + h_length and pos.x >= center.x - h_length) and  (pos.y <= center.y + h_length and pos.y >= center.y - h_length)
+
+def isInBox2(pos,min,max):
+    return (pos.x <= max.x and pos.x >= min.x) and  (pos.y <= max.y and pos.y >= min.y)
+
 def countParticles(p_pos,total_size=15,frame_size=480):
     """Count how many particles has a cell in a grid without interpolations, i.e a particle is only in one cell
         >Args: -p_pos: particles positions
