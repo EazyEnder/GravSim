@@ -7,16 +7,15 @@ from QuadTree.QRegion import QRegion
 from utils import printProgressBar
 from timeit import default_timer as timer
 
-import time
 
-N = 500
+N = 100
 positions = np.random.normal(0.5,0.3,(N,2))
 
 qt = QuadTree(QRegion(Vector2(.5,.5),1.))
 for p in positions:
     qt.insert(Particle(1.,p[0],p[1],0,0,1))
 
-fig, (ax, ax2, ax3) = plt.subplots(1,3)
+fig, (ax, ax2) = plt.subplots(1,2)
 
 #print(qt.getForce(qt.getAllParticles()[0]).length())
 
@@ -33,19 +32,11 @@ ax2.set_ylabel("pos Y")
 
 qt.computeMassCenter()
 qt.drawLines(ax)
+start = timer()
 qt.drawForces(ax)
+end = timer()
 qt.drawLines(ax2)
 qt.drawMassCenter(ax2)
-
-x = np.linspace(0,100,100)
-times = []
-for i in x:
-    start = timer()
-    for p in qt.getAllParticles():
-        qt.getForce(p, i)
-    end = timer()
-    times.append(end - start)
-    printProgressBar(i,np.max(x))
-ax3.scatter(x,times)
+print(end-start)
 
 plt.show()

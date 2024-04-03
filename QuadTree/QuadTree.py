@@ -153,7 +153,7 @@ class QuadTree():
         for p in self.particles:
             x.append(p.r.x)
             y.append(p.r.y)
-            force = self.getForce(p)
+            force = self.getForce(p,precision=1)
             u.append(force.x)
             v.append(force.y)
 
@@ -188,7 +188,6 @@ class QuadTree():
         layer = self
         parent_index = -1
         while(layer.parent != None):
-
             for i in range(len(layer.parent[0].subqt)):
                 if(i == parent_index):
                     continue

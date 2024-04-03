@@ -24,7 +24,12 @@ class Particle():
         return p2.r.equals(self.r) and p2.old_r.equals(self.old_r) and p2.m == self.m
     def clone(self):
         """Clone this particle"""
-        return copy.deepcopy(self)
+        clone = Particle(self.m,self.r.x,self.r.y,self.r.x,self.r.y)
+        clone.old_r = self.old_r
+        clone.states = self.states
+        clone.potential_energy = self.potential_energy
+        clone.host = self.host
+        return clone
     def save(self):
         """Save this particle in the 'states' list"""
         self.states.append((self.old_r,self.potential_energy))
