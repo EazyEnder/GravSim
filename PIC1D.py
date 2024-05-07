@@ -31,7 +31,7 @@ def buildGradientMatrix1D(N=10,dx=1):
     return M
 
 
-def leapfrog(particles_pos, Nx, size, rho0, cst_G=G_CST):
+def getAcceleration(particles_pos, Nx, size, rho0, cst_G=G_CST):
 	N = particles_pos.shape[0]
 	dx = size / Nx
 	j = np.floor(particles_pos/dx).astype(int)
@@ -103,13 +103,13 @@ G_slider.on_changed(slider_update)
 
 
 def launchSim(dt,Nt,Nx,size,p_pos,p_vel):
-    p_ac = leapfrog( p_pos, Nx, size, 1.)
+    p_ac = getAcceleration( p_pos, Nx, size, 1.)
     t = 0
     for i in range(Nt):
          p_vel += p_ac * dt/2.0
          p_pos += p_vel * dt
          p_pos = np.mod(p_pos, size)
-         p_ac = leapfrog( p_pos, Nx, size, 1, G_CST)
+         p_ac = getAcceleration( p_pos, Nx, size, 1, G_CST)
          p_vel += p_ac * dt/2.0
          plotGraph(p_pos,p_vel,ax1,ax2)
          #plt.savefig(fname="export/fig"+str(i)+"")

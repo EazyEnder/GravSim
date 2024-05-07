@@ -3,14 +3,14 @@ import numpy as np
 from serializePositions import deserializeArray
 from utils import countParticles, findMassCenter, printProgressBar
 
-def plotGraph(p_pos,size,ax=None):
-     rho = countParticles(p_pos,total_size=size)
+def plotGraph(p_pos,size,ax=None,frame_size=480, periodic=True):
+     rho = countParticles(p_pos,total_size=size,frame_size=frame_size,periodic=periodic)
      if(ax == None):
           plt.clf()
           plt.imshow(np.power(rho,0.5), cmap="afmhot")
           plt.colorbar()
      else:
-         ax.imshow(np.power(rho,0.5), cmap="afmhot")
+         ax.imshow(np.power(rho,0.75), cmap="afmhot")
 
 def centerFilm(sim_file_name="sim.txt",export_file_prefix="modified_export",size=15,exceptions=[]):
      """Plot density graph and keep to the center the 'main body' using an approximation of the inertia center

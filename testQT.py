@@ -37,6 +37,23 @@ qt.drawForces(ax)
 end = timer()
 qt.drawLines(ax2)
 qt.drawMassCenter(ax2)
-print(end-start)
+#print(end-start)
+
+x = []
+y = []
+u = []
+v = []
+for p in qt.getAllParticles():
+    x.append(p.r.x)
+    y.append(p.r.y)
+    f_sum = Vector2(0,0)
+    for p1 in qt.getAllParticles():
+        if(p1.equals(p)):
+            continue
+        f_sum = f_sum.add(p1.r.sub(p.r).normalize().multiplyScalar(0.005 * (p.m*p1.m) * 1/(p.distTo(p1)**2+0.3**2)))
+    u.append(f_sum.x)
+    v.append(f_sum.y)
+
+ax.quiver(x,y, u, v, color="orange", width=0.0025)
 
 plt.show()

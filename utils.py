@@ -16,7 +16,7 @@ def isInBox(pos,center,h_length):
 def isInBox2(pos,min,max):
     return (pos.x <= max.x and pos.x >= min.x) and  (pos.y <= max.y and pos.y >= min.y)
 
-def countParticles(p_pos,total_size=15,frame_size=480):
+def countParticles(p_pos,total_size=15,frame_size=480,periodic=True):
     """Count how many particles has a cell in a grid without interpolations, i.e a particle is only in one cell
         >Args: -p_pos: particles positions
             -size: size of the simulation box\n
@@ -26,14 +26,19 @@ def countParticles(p_pos,total_size=15,frame_size=480):
     for pos in p_pos:
         i0 = floor(frame_size*pos[0]/total_size)
         i1 = floor(frame_size*pos[1]/total_size)
-        if i1 >= frame_size:
-            i1 = frame_size -1
-        if i0 >= frame_size:
-            i0 = frame_size -1
-        rho[i0,i1] += 1
+        if(periodic):
+            if i1 >= frame_size:
+                i1 = frame_size -1
+            if i0 >= frame_size:
+                i0 = frame_size -1
+        try:
+            rho[i0,i1] += 1
+        except:
+            "particle outbound"
     return rho
 
 def countParticlesUsingBilinearInterp(p_pos,total_size=15,frame_size=480):
+    """Not completed"""
     weights = []
     for pos in p_pos:
         p0 = frame_size*pos[0]/total_size

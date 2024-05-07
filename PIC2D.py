@@ -11,7 +11,7 @@ G_CST = 0.00025
 def buildLaplacian2DKernel(N=10,dx=1):
         i = np.ones(N)
         diags = np.array([-1,0,1])
-        vals  = np.vstack((i,-2*i,i))
+        vals  = np.vstack((i,-4*i,i))
         M = sp.spdiags(vals, diags, N, N)
         M = sp.lil_matrix(M)
         M[0,N-1] = 1
@@ -47,7 +47,7 @@ def buildGradientMatrix2D(N=10,dx=1):
     return M
 
 from math import floor
-def getAcc(particles_pos, Nx, size, rho0, cst_G=G_CST):
+def getAcceleration(particles_pos, Nx, size, rho0, cst_G=G_CST):
     N = particles_pos.shape[0]
     dx = size / Nx
 
@@ -127,7 +127,7 @@ def plotGraph(p_pos,size):
      plt.colorbar()
 
 def launchSim(dt,Nt,Nx,size,p_pos,p_vel_x,p_vel_y):
-    (p_ac_x,p_ac_y) = getAcc( p_pos, Nx, size, 1.)
+    (p_ac_x,p_ac_y) = getAcceleration( p_pos, Nx, size, 1.)
     t = 0
     for i in range(Nt):
          printProgressBar(i,Nt)
@@ -136,7 +136,7 @@ def launchSim(dt,Nt,Nx,size,p_pos,p_vel_x,p_vel_y):
          p_pos[:,0] += p_vel_x * dt
          p_pos[:,1] += p_vel_y * dt
          p_pos = np.mod(p_pos, size)
-         (p_ac_x,p_ac_y) = getAcc( p_pos, Nx, size, 1, G_CST)
+         (p_ac_x,p_ac_y) = getAcceleration( p_pos, Nx, size, 1, G_CST)
          p_vel_x += p_ac_x * dt/2.0
          p_vel_y += p_ac_y * dt/2.0
          plotGraph(p_pos,size)

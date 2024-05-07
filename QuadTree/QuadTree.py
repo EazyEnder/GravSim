@@ -2,7 +2,7 @@
 QT_PARTICLE_CAPACITY = 10
 """How many particles a qt can contain"""
 
-G = 0.25
+G = 0.15
 
 from Vector2 import Vector2
 from utils import isInBox2
@@ -22,30 +22,39 @@ class QuadTree():
         #masscenter : [mass, Vector2(x,y)]
         self.masscenter = None
 
+        self.minsize = None
+
     def insert(self,particle):
         """Insert a particle in the quadtree
             >Args: particle
             >Return: if it's a success
         """
+
+        #check if the particle isnt already in the QT
         if(not(self.region.containsParticle(particle))):
             return False
+        #check if the QT has the space and has no children to host it
         if(len(self.particles) < QT_PARTICLE_CAPACITY and self.subqt[0] == None):
             particle.host = self
             self.particles.append(particle)
             return True
         
+        #If the QT has no children then we subdivide
         if(self.subqt[0] == None):
             self.subdivide()
 
+        #After the subdivision we insert the particle to the children
         for qt in self.subqt:
             if(qt.insert(particle)):
                 return True
         
+        #If a particle is not in any QRegion (happen if the particle's position is far to the qt) we failed to insert the particle
         return False
     
     def subdivide(self):
         """Subdivide the quadtree into 4 smaller trees"""
 
+        #create the 4 children
         #NE
         self.subqt[1] = QuadTree(QRegion(self.region.center.add(Vector2(-self.region.half_length/2,+self.region.half_length/2)),self.region.half_length/2))
         #NW
@@ -58,15 +67,17 @@ class QuadTree():
         for i in range(len(self.subqt)):
             self.subqt[i].parent = (self,i)
 
-        #Copy the list bcs always a bad idea to modify when we iterate it
+        #Copy the list bcs always a bad idea to modify while we iterate it
         qt_particles = []
         qt_particles.extend(self.particles)
+        #distribution of particles coming from the parent
         for p in qt_particles:
             for qt in self.subqt:
                 if(qt.region.containsParticle(p)):
                     qt.insert(p)
                     self.particles.remove(p)
                     break
+        #If even after the subdivision the parent has particles
         if(len(self.particles) > 0):
             print("QT node not in subtree")
 
@@ -98,12 +109,16 @@ class QuadTree():
         """Compute the inertial center of all the particles in the QuadTree and his children"""
         #mass, vector 2 position
         masscenter = [0,Vector2(0,0)]
+        #If qt has children then we'll compute their masscenter
         if(self.subqt[0] != None):
             for qt in self.subqt:
                 m_c = qt.masscenter
+                #if the child's hasn't mass center computed
                 if(m_c == None):
                     m_c = qt.computeMassCenter()
+                #Add mass to the total mass
                 masscenter[0] += m_c[0]
+                #Add the position proportionately to the mass
                 masscenter[1] = masscenter[1].add(m_c[1].multiplyScalar(m_c[0]))
             masscenter[1] = masscenter[1].multiplyScalar(1/masscenter[0])
         
@@ -153,7 +168,7 @@ class QuadTree():
         for p in self.particles:
             x.append(p.r.x)
             y.append(p.r.y)
-            force = self.getForce(p,precision=1)
+            force = self.getForce(p)
             u.append(force.x)
             v.append(force.y)
 
@@ -178,7 +193,7 @@ class QuadTree():
 
         return part
     
-    def getForce(self, particle, precision = 1):
+    def getForce(self, particle, precision = 0.7):
         
         if(self.masscenter == None):
             self.computeMassCenter()
@@ -187,13 +202,17 @@ class QuadTree():
 
         layer = self
         parent_index = -1
+        
+        for p in self.particles:
+                if(not(p.equals(particle))):
+                    force = force.add(p.r.sub(particle.r).normalize().multiplyScalar(G * (p.m*particle.m) * 1/(p.distTo(particle)**2+0.3**2)))
         while(layer.parent != None):
-            for i in range(len(layer.parent[0].subqt)):
+            layer,parent_index = layer.parent
+            for i in range(len(layer.subqt)):
                 if(i == parent_index):
                     continue
-                force = force.add(layer.parent[0].subqt[i].getSubForce(particle, precision))
+                force = force.add(layer.subqt[i].getSubForce(particle, precision))
 
-            layer,parent_index = layer.parent
 
         return force
     
@@ -213,14 +232,21 @@ class QuadTree():
     
     def getSubForce(self, particle, precision=1):
 
-        distToQt = self.getClosestDistance(particle.r)
-        sizeQt = self.getMinSize()
+        if(self.masscenter == None):
+                self.computeMassCenter()
 
-        if(distToQt/sizeQt < precision):
+        #distToQt = self.getClosestDistance(particle.r)
+        #if(self.minsize == None):
+        #    self.minsize = self.getMinSize()
+        #sizeQt = self.minsize
+
+        distToQt = self.masscenter[1].sub(particle.r).length()
+        sizeQt = self.region.half_length*2
+
+        if(distToQt == 0 or sizeQt/distToQt > precision):
             f_sum = Vector2(0,0)
 
             if(self.subqt[0] != None):
-                f_sum = Vector2(0,0)
                 for qt in self.subqt:
                     f_sum = f_sum.add(qt.getSubForce(particle, precision))
                 return f_sum
@@ -229,6 +255,4 @@ class QuadTree():
                 f_sum = f_sum.add(p.r.sub(particle.r).normalize().multiplyScalar(G * (p.m*particle.m) * 1/(p.distTo(particle)**2+0.3**2)))
             return f_sum
         else:
-            if(self.masscenter == None):
-                self.computeMassCenter()
             return Vector2(0,0).add(self.masscenter[1].sub(particle.r).normalize().multiplyScalar(G * (self.masscenter[0]*particle.m) * 1/(self.masscenter[1].sub(particle.r).length()**2+0.3**2)))
